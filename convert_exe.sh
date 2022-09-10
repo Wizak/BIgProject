@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --add-data "config.json;." --add-data "disconnect_info.png;." --hidden-import="utils" --hidden-import="windowcapture" --hidden-import="components" --name "AI Bot" main.py

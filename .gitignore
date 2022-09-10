@@ -1,0 +1,7 @@
+/venv
+/R2_ai_bot/test
+/R2_ai_bot/mobs
+
+**/__pycache__
+*.spec
+*.txt

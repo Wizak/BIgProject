@@ -1,0 +1,14 @@
+{
+    "FPS": 10,
+    "WINDOW_SIZE": [
+        640,
+        360
+    ],
+    "DISCONNECT_INFO": "disconnect_info.png",
+    "WINDOW_ICON": "window_icon.ico",
+    "PERMISSION_FILE": "permission.json",
+    "ACTIONS_LOGS": "",
+    "SPEECH_LOGS": "",
+    "TARGET_WINDOW": "??",
+    "TARGET_FOLDER": "C:/Users/bogda/Desktop/BIGPROJECT/mobs"
+}

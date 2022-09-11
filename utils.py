@@ -1,5 +1,6 @@
 from io import BytesIO
 from PIL import Image
+from imageai.Detection.Custom import CustomObjectDetection
 
 import cv2
 import numpy as np
@@ -10,10 +11,22 @@ import win32gui
 import sys
 
 
+DEFAULT_CONFIG = {
+    "FPS": 20,
+    "WINDOW_SIZE": [
+        640,
+        360
+    ],
+    "DISCONNECT_INFO": "disconnect_info.png",
+    "WINDOW_ICON": "window_icon.ico"
+}
+
+
 def get_file_path(filename):
     bundle_dir = getattr(
         sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
-    path_to_file = os.path.abspath(os.path.join(bundle_dir, filename))
+    path_to_file = os.path.abspath(
+        os.path.join(bundle_dir, 'static/' + filename))
     return path_to_file
 
 
@@ -25,11 +38,32 @@ def init_config(conf_file=None, file_path='config.json'):
     else:
         mode = 'w'
 
-    with open(file_path, mode) as file:
-        if mode == 'r':
-            conf_file = json.load(file)
-            return conf_file
-        json.dump(conf_file, file, indent=4)
+    file_creating = True
+    while True:
+        if os.path.exists(file_path):
+            with open(file_path, mode) as file:
+                if mode == 'r':
+                    conf_file = json.load(file)
+                    return conf_file
+                json.dump(conf_file, file, indent=4)
+            break
+        if file_creating:
+            with open(file_path, 'w') as file:
+                json.dump(DEFAULT_CONFIG, file, indent=4)
+            file_creating = False
+
+
+def get_perm(filename, directory, window, values):
+    if filename != '' and directory != '':
+        if filename in os.listdir(directory):
+            abs_path = os.path.join(directory, filename)
+            with open(abs_path, 'r') as file:
+                ready_check = json.load(file)
+            if ready_check['READY'] and values['-TARGET WINDOW-'] == ready_check['WINDOW']:
+                window['-START-'].update(disabled=False)
+                return True
+    window['-START-'].update(disabled=True)
+    return False
 
 
 def get_titles():
@@ -46,6 +80,14 @@ def get_titles():
     return WINDOW_LIST
 
 
+def create_image(image_size):
+    img = Image.new('RGB', image_size, color='black')
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue())
+    return img_str
+
+
 def resize_image(filename, image_size):
     abs_path = get_file_path(filename)
     img = Image.open(abs_path)
@@ -56,14 +98,21 @@ def resize_image(filename, image_size):
     return img_str
 
 
-def label_detecting(stream):
-    return stream
+def label_detecting(stream, detector):
+    detections = detector.detectObjectsFromImage(
+        input_image=stream,
+        input_type='array',
+        output_type='array',
+        minimum_percentage_probability=40,
+        extract_detected_objects=True,
+        thread_safe=False
+    )
+    return detections[0]
 
 
-def output_stream(stream, image_size, detecting=False):
+def output_stream(stream, image_size, detector, detecting=True):
     if detecting:
-        stream = label_detecting(stream)
-    img = Image.fromarray(np.uint8(stream))
-    resized_img = img.resize(image_size)
-    imgbytes = cv2.imencode('.png', np.asarray(resized_img))[1]
-    return imgbytes.tobytes()
+        stream = label_detecting(stream, detector)
+    resized = cv2.resize(stream, image_size, interpolation=cv2.INTER_AREA)
+    imgbytes = cv2.imencode('.png', resized)[1].tobytes()
+    return imgbytes

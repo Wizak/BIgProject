@@ -7,4 +7,4 @@
 ## A program used to automate the gameplay to obtain game resources with less time
 
 #### Window of game:
-[![Alt text](https://img.youtube.com/vi/VID/0.jpg)](https://www.youtube.com/watch?v=VID)
+[![Video demonstration](https://img.youtube.com/vi/xeejWRi8t00/0.jpg)](https://www.youtube.com/watch?v=xeejWRi8t00)

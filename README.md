@@ -8,3 +8,6 @@
 
 #### Video example:
 [![Video demonstration](https://img.youtube.com/vi/xeejWRi8t00/0.jpg)](https://www.youtube.com/watch?v=xeejWRi8t00)
+
+
+> :warning: **If your are viewing this repository**: Be very careful: it is the worst code i ever wrote! :) This only for diploma work - not for production. 

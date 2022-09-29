@@ -1,4 +1,3 @@
-from tkinter import BUTT
 from utils import resize_image, get_file_path, create_image
 
 import PySimpleGUI as sg
@@ -51,10 +50,11 @@ def layout_all(windows_list, image_path, image_size):
                      key='-VIDEO STREAM-')
         ]
     ]
+    multiline_menu = ['', ['Save']]
     center_column_right = [
         [
             sg.Multiline(size=(55, 22), key='-ACTIONS LOGS-', autoscroll=True, disabled=True,
-                         enable_events=True)
+                         enable_events=True, right_click_menu=multiline_menu)
         ]
     ]
     center_layout = [
@@ -65,25 +65,46 @@ def layout_all(windows_list, image_path, image_size):
                       element_justification='right', expand_x=True)
         ]
     ]
+    GRAPH_WIDTH, GRAPH_HEIGHT = 120, 40
+
+    def GraphColumn(name, key):
+        layout = [
+            [sg.Text(name, size=(18, 1), font=('Helvetica 8'), key=key+'TXT_')],
+            [sg.Graph((GRAPH_WIDTH, GRAPH_HEIGHT),
+                      (0, 0),
+                      (GRAPH_WIDTH, 100),
+                      background_color='black',
+                      key=key+'GRAPH_')]]
+        return sg.Col(layout, pad=(2, 2))
+    dash_layout = [
+        [GraphColumn('Net Out', '_NET_OUT_'),
+         GraphColumn('Net In', '_NET_IN_'),
+         GraphColumn('Disk Read', '_DISK_READ_')],
+        [GraphColumn('Disk Write', '_DISK_WRITE_'),
+         GraphColumn('CPU Usage', '_CPU_'),
+         GraphColumn('Memory Usage', '_MEM_')],
+    ]
     footer_column_left = [
         [
-            sg.Button(button_text='CHECK SETTINGS',
-                      enable_events=True, key='-CHECK-', expand_x=True),
-            sg.Button(button_text='ACTIVATE BOT', expand_x=True)
-        ],
-        [
-            sg.Button(button_text='SPEECH INTERVENE', expand_x=True),
-            sg.Button(expand_x=True),
-            sg.Button(expand_x=True)
+            sg.Column(dash_layout),
+            sg.Column([
+                [
+                    sg.Button(button_text='CHECK SETTINGS',
+                              enable_events=True, key='-CHECK-', expand_x=True),
+                    sg.Button(button_text='ACTIVATE BOT', expand_x=True)
+                ],
+                [
+                    sg.Button(button_text='SPEECH INTERVENE', expand_x=True)
+                ]
+            ])
         ]
     ]
     footer_column_right = [
         [
-            sg.Button(button_text='SPEECH INTERVENE', size=(50, 1))
-        ],
-        [
-            sg.Multiline(size=(55, 18), key='-SPEECH LOGS-', autoscroll=True, disabled=True,
-                         enable_events=True)
+            sg.Column([
+                [sg.Multiline(size=(55, 18), key='-SPEECH LOGS-', autoscroll=True, disabled=True,
+                              enable_events=True)]
+            ])
         ]
     ]
     footer_layout = [

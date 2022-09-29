@@ -1,8 +1,11 @@
 /venv
 /mobs
-/R2_ai_bot/test
-/R2_ai_bot/mobs
+/build
+/dist
 
 **/__pycache__
 *.spec
-*.txt
+*.bat
+*.pdf
+*.docx
+

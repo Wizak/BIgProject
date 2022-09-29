@@ -1,9 +1,7 @@
 from io import BytesIO
 from PIL import Image
-from imageai.Detection.Custom import CustomObjectDetection
 
 import cv2
-import numpy as np
 import os
 import base64
 import json
@@ -107,12 +105,14 @@ def label_detecting(stream, detector):
         extract_detected_objects=True,
         thread_safe=False
     )
-    return detections[0]
+    return detections[0], detections[1]
 
 
 def output_stream(stream, image_size, detector, detecting=True):
+    detections = None
     if detecting:
-        stream = label_detecting(stream, detector)
-    resized = cv2.resize(stream, image_size, interpolation=cv2.INTER_AREA)
+        stream, detections = label_detecting(stream, detector)
+    resized = cv2.resize(
+        stream, image_size, interpolation=cv2.INTER_AREA)
     imgbytes = cv2.imencode('.png', resized)[1].tobytes()
-    return imgbytes
+    return detections, imgbytes

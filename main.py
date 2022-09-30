@@ -2,6 +2,7 @@ from imageai.Detection.Custom import CustomObjectDetection
 from wincapture import WindowCapture
 from components import layout_all
 from speech import recognition_speech
+from datetime import datetime
 from dashboard import *
 from utils import (
     resize_image,
@@ -74,6 +75,12 @@ def speech_value(window):
         pass
 
 
+def activate_game_bot(values):
+    if 'R2' not in values['-TARGET WINDOW-'] or '??' not in values['-TARGET WINDOW-']:
+        sg.Popup('WARNING!\ngame is not ready',
+                 title='Activate ERROR')
+
+
 def streaming_event(window, values, detector):
     global DETECTIONS
     try:
@@ -89,34 +96,37 @@ def streaming_event(window, values, detector):
 def actions_logs_event(window, values):
     global DETECTOR_COUNT
     if DETECTING and DETECTIONS is not None:
-        DETECTOR_COUNT += 1
         from datetime import datetime
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
-        # time = '-===  DETECTED  ===-'
-        window["-ACTIONS LOGS-"].update('\n\n', append=True)
-        window["-ACTIONS LOGS-"].update('Event ' + str(DETECTOR_COUNT), text_color_for_value='white',
-                                        background_color_for_value='blue', append=True)
-        window["-ACTIONS LOGS-"].update('-'*18, append=True)
-        window["-ACTIONS LOGS-"].update(
-            '--==DETECTED==--', text_color_for_value='yellow', background_color_for_value='black', append=True)
-        window["-ACTIONS LOGS-"].update('-'*18, append=True)
-        window["-ACTIONS LOGS-"].update(
-            '[' + time + ']', text_color_for_value='white', background_color_for_value='blue', append=True)
-        for detect in DETECTIONS:
-            window["-ACTIONS LOGS-"].update('\n', append=True)
-            window["-ACTIONS LOGS-"].update('MONSTER => ' + detect['name'],
-                                            text_color_for_value='black', background_color_for_value='yellow', append=True)
-            window["-ACTIONS LOGS-"].update('\t', append=True)
-            window["-ACTIONS LOGS-"].update('PROBABILITY => ' + str(round(detect['percentage_probability'], 3)),
-                                            text_color_for_value='black', background_color_for_value='yellow', append=True)
-            window["-ACTIONS LOGS-"].update('\n', append=True)
-            window["-ACTIONS LOGS-"].update('POSITION => x = ' + str(detect['box_points'][0]) + ' y = ' + str(detect['box_points'][1]),
-                                            text_color_for_value='black', background_color_for_value='yellow', append=True)
+        if DETECTIONS != []:
+            DETECTOR_COUNT += 1
+            window["-ACTIONS LOGS-"].update('\n\n', append=True)
+            window["-ACTIONS LOGS-"].update('Event ' + str(DETECTOR_COUNT), text_color_for_value='white',
+                                            background_color_for_value='blue', append=True)
+            window["-ACTIONS LOGS-"].update('-'*18, append=True)
+            window["-ACTIONS LOGS-"].update(
+                '--==DETECTED==--', text_color_for_value='yellow', background_color_for_value='black', append=True)
+            window["-ACTIONS LOGS-"].update('-'*18, append=True)
+            window["-ACTIONS LOGS-"].update(
+                '[' + time + ']', text_color_for_value='white', background_color_for_value='blue', append=True)
+            for idx, detect in enumerate(DETECTIONS):
+                window["-ACTIONS LOGS-"].update('\n\n', append=True)
+                window["-ACTIONS LOGS-"].update(f'{idx+1}. ', text_color_for_value='white',
+                                                background_color_for_value='black', append=True)
+                window["-ACTIONS LOGS-"].update('MONSTER => ' + detect['name'],
+                                                text_color_for_value='black', background_color_for_value='yellow', append=True)
+                window["-ACTIONS LOGS-"].update('\t', append=True)
+                window["-ACTIONS LOGS-"].update('PROBABILITY => ' + str(round(detect['percentage_probability'], 3)),
+                                                text_color_for_value='black', background_color_for_value='yellow', append=True)
+                window["-ACTIONS LOGS-"].update('\n', append=True)
+                window["-ACTIONS LOGS-"].update('POSITION => x = ' + str(detect['box_points'][0]) + ' y = ' + str(detect['box_points'][1]),
+                                                text_color_for_value='black', background_color_for_value='yellow', append=True)
 
 
 def speech_window():
-    window = sg.Window('Speech Recognition')
+    window = sg.Window('Speech Recognition', layout=[
+                       [sg.Button('Hello World')]])
     while True:
         event, values = window.read()
 
@@ -128,7 +138,6 @@ def speech_window():
 def speeching_logs_event(window, values):
     global DETECTOR_COUNT
     if DETECTING and DETECTIONS is not None:
-        from datetime import datetime
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
         # time = '-===  DETECTED  ===-'
@@ -323,6 +332,12 @@ def main():
 
         if event == '-CHECK-':
             check_event(window, values)
+
+        if event == '-ACTIVATE-':
+            activate_game_bot(values)
+
+        if event == '-SPEECH-':
+            speech_window()
 
         if event == 'Save':
             save_actions_logs(values)

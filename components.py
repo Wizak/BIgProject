@@ -91,10 +91,12 @@ def layout_all(windows_list, image_path, image_size):
                 [
                     sg.Button(button_text='CHECK SETTINGS',
                               enable_events=True, key='-CHECK-', expand_x=True),
-                    sg.Button(button_text='ACTIVATE BOT', expand_x=True)
+                    sg.Button(button_text='ACTIVATE BOT',
+                              key='-ACTIVATE-', expand_x=True)
                 ],
                 [
-                    sg.Button(button_text='SPEECH INTERVENE', expand_x=True)
+                    sg.Button(button_text='SPEECH INTERVENE',
+                              key='-SPEECH-', expand_x=True)
                 ]
             ])
         ]

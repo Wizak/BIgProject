@@ -2,10 +2,12 @@
 /mobs
 /build
 /dist
+/docs
 
 **/__pycache__
 *.spec
 *.bat
 *.pdf
 *.docx
+
 

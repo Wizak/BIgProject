@@ -1,5 +1,6 @@
 import PySimpleGUI as sg
 import psutil
+import GPUtil
 
 
 # each individual graph size in pixels

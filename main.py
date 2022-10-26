@@ -1,7 +1,13 @@
+
+import PySimpleGUI as sg
+import tensorflow as tf
+import os
+import random
+
 from imageai.Detection.Custom import CustomObjectDetection
 from wincapture import WindowCapture
 from components import layout_all
-from speech import recognition_speech
+# from speech import recognition_speech
 from datetime import datetime
 from dashboard import *
 from utils import (
@@ -13,8 +19,12 @@ from utils import (
     get_perm
 )
 
-import PySimpleGUI as sg
-import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
+
+tf.config.experimental.enable_mlir_graph_optimization()
+tf.config.run_functions_eagerly(True)
 
 
 def start_event(window):
@@ -140,26 +150,14 @@ def speeching_logs_event(window, values):
     if DETECTING and DETECTIONS is not None:
         now = datetime.now()
         time = now.strftime("%H:%M:%S")
+        commands = random.choices(
+            SLAVE_MESSAGE['commands'], weights=SLAVE_MESSAGE['weights'], k=random.randint(1, 3))
         # time = '-===  DETECTED  ===-'
-        window["-SPEECH LOGS-"].update('\n\n', append=True)
-        window["-SPEECH LOGS-"].update('Event ' + str(DETECTOR_COUNT), text_color_for_value='white',
-                                       background_color_for_value='blue', append=True)
-        window["-SPEECH LOGS-"].update('-'*18, append=True)
-        window["-SPEECH LOGS-"].update(
-            '--==DETECTED==--', text_color_for_value='yellow', background_color_for_value='black', append=True)
-        window["-SPEECH LOGS-"].update('-'*18, append=True)
-        window["-SPEECH LOGS-"].update(
-            '[' + time + ']', text_color_for_value='white', background_color_for_value='blue', append=True)
-        for detect in DETECTIONS:
-            window["-SPEECH LOGS-"].update('\n', append=True)
-            window["-SPEECH LOGS-"].update('MONSTER => ' + detect['name'],
-                                           text_color_for_value='black', background_color_for_value='yellow', append=True)
-            window["-SPEECH LOGS-"].update('\t', append=True)
-            window["-SPEECH LOGS-"].update('PROBABILITY => ' + str(round(detect['percentage_probability'], 3)),
-                                           text_color_for_value='black', background_color_for_value='yellow', append=True)
-            window["-SPEECH LOGS-"].update('\n', append=True)
-            window["-SPEECH LOGS-"].update('POSITION => x = ' + str(detect['box_points'][0]) + ' y = ' + str(detect['box_points'][1]),
-                                           text_color_for_value='black', background_color_for_value='yellow', append=True)
+        if DETECTIONS != []:
+            for command in commands:
+                window["-SPEECH LOGS-"].update('\n', append=True)
+                window["-SPEECH LOGS-"].update(command,
+                                               text_color_for_value='black', background_color_for_value='yellow', append=True)
 
 
 def clear_event(window):
@@ -176,8 +174,6 @@ def clear_event(window):
 
 def program_close():
     global CONFIG
-    # CONFIG['ACTIONS_LOGS'] = VALUES['-ACTIONS LOGS-']
-    # CONFIG['SPEECH_LOGS'] = VALUES['-SPEECH LOGS-']
     CONFIG['TARGET_WINDOW'] = VALUES['-TARGET WINDOW-']
     CONFIG['TARGET_FOLDER'] = VALUES['-TARGET FOLDER-']
 
@@ -228,7 +224,7 @@ def init_detector(folder_path):
     return detector
 
 
-def psutility(window, net_graph_in, net_graph_out, disk_graph_read, disk_graph_write, cpu_usage_graph, mem_usage_graph):
+def psutility(window, net_graph_in, net_graph_out, disk_graph_read, gpu_usage_graph, cpu_usage_graph, mem_usage_graph):
     netio = psutil.net_io_counters()
     write_bytes = net_graph_out.graph_value(netio.bytes_sent)
     read_bytes = net_graph_in.graph_value(netio.bytes_recv)
@@ -238,12 +234,13 @@ def psutility(window, net_graph_in, net_graph_out, disk_graph_read, disk_graph_w
         'Net In {}'.format(human_size(read_bytes)))
     # ----- Disk Graphs -----
     diskio = psutil.disk_io_counters()
-    write_bytes = disk_graph_write.graph_value(diskio.write_bytes)
     read_bytes = disk_graph_read.graph_value(diskio.read_bytes)
-    window['_DISK_WRITE_TXT_'].update(
-        'Disk Write {}'.format(human_size(write_bytes)))
     window['_DISK_READ_TXT_'].update(
         'Disk Read {}'.format(human_size(read_bytes)))
+    # ----- GPU Graph -----
+    gpu = GPUtil.getGPUs()[-1].load*100
+    gpu_usage_graph.graph_percentage_abs(gpu)
+    window['_GPU_TXT_'].update('{0:2.0f}% GPU Used'.format(gpu))
     # ----- CPU Graph -----
     cpu = psutil.cpu_percent(0)
     cpu_usage_graph.graph_percentage_abs(cpu)
@@ -264,6 +261,21 @@ DETECTIONS = None
 DETECTOR_COUNT = 0
 DETECTOR_READY = True
 
+SLAVE_MESSAGE = {
+    'commands': [
+        '[ACTION] \tpress',
+        '[ACTION] \tloot',
+        '[MOVE] \tv',
+        '[MOVE] \t^',
+        '[MOVE] \t<-',
+        '[MOVE] \t->',
+        '[TARGET] \tvampire #1',
+        '[TARGET] \tvampire #2',
+        '[TARGET] \tvampire #3'
+    ],
+    'weights': [2, 2, 4, 3, 4, 3, 1, 1, 1]
+}
+
 
 def main():
     global VALUES, DETECTOR_READY
@@ -271,6 +283,7 @@ def main():
     main_settings = get_window_settings()
     window = sg.Window('AI Bot', **main_settings)
     timeout = int(1000/CONFIG['FPS'])
+
     netio = psutil.net_io_counters()
     net_in = window['_NET_IN_GRAPH_']
     net_graph_in = DashGraph(net_in, netio.bytes_recv, '#23a0a0')
@@ -278,13 +291,13 @@ def main():
     net_graph_out = DashGraph(net_out, netio.bytes_sent, '#56d856')
 
     diskio = psutil.disk_io_counters()
-    disk_graph_write = DashGraph(
-        window['_DISK_WRITE_GRAPH_'], diskio.write_bytes, '#be45be')
     disk_graph_read = DashGraph(
         window['_DISK_READ_GRAPH_'], diskio.read_bytes, '#5681d8')
 
+    gpu_usage_graph = DashGraph(window['_GPU_GRAPH_'], 0, '#d34545')
     cpu_usage_graph = DashGraph(window['_CPU_GRAPH_'], 0, '#d34545')
     mem_usage_graph = DashGraph(window['_MEM_GRAPH_'], 0, '#BE7C29')
+
     while True:
         event, values = window.read(timeout=timeout)
 
@@ -343,7 +356,7 @@ def main():
             save_actions_logs(values)
 
         psutility(window, net_graph_in, net_graph_out, disk_graph_read,
-                  disk_graph_write, cpu_usage_graph, mem_usage_graph)
+                  gpu_usage_graph, cpu_usage_graph, mem_usage_graph)
 
         VALUES = {**values}
 

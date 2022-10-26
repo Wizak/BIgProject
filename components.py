@@ -80,7 +80,7 @@ def layout_all(windows_list, image_path, image_size):
         [GraphColumn('Net Out', '_NET_OUT_'),
          GraphColumn('Net In', '_NET_IN_'),
          GraphColumn('Disk Read', '_DISK_READ_')],
-        [GraphColumn('Disk Write', '_DISK_WRITE_'),
+        [GraphColumn('GPU Usage', '_GPU_'),
          GraphColumn('CPU Usage', '_CPU_'),
          GraphColumn('Memory Usage', '_MEM_')],
     ]

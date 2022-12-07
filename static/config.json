@@ -7,6 +7,6 @@
     "DISCONNECT_INFO": "disconnect_info.png",
     "WINDOW_ICON": "window_icon.ico",
     "PERMISSION_FILE": "permission.json",
-    "TARGET_WINDOW": "",
-    "TARGET_FOLDER": ""
+    "TARGET_WINDOW": "??",
+    "TARGET_FOLDER": "C:/Users/bogda/Desktop/BIGPROJECT/mobs"
 }
